@@ -15,12 +15,12 @@ Since this uses Gmail to send emails, you'll need an App Password (regular passw
 1. Go to [Google Account Security](https://myaccount.google.com/security)
 2. Enable 2-Step Verification if not already enabled
 3. Go to [App Passwords](https://myaccount.google.com/apppasswords)
-4. Select "Mail" and "Other (Custom name)" → name it "GitHub Actions"
-5. Copy the 16-character password generated
+4. Enter "GitHub Actions" as the app name and click **Create**
+5. Copy the 16-character password generated (you won't be able to see it again)
 
 ### 3. Add GitHub Secrets
 
-In your repository, go to **Settings → Secrets and variables → Actions** and add:
+In your repository, go to **Settings → Security → Secrets and variables → Actions**, click the **Secrets** tab, then **New repository secret** to add:
 
 | Secret Name | Value |
 |-------------|-------|
@@ -72,7 +72,7 @@ password: ${{ secrets.SENDGRID_API_KEY }}
 ## Troubleshooting
 
 - **PDF not found**: The front page PDF may not be available until mid-morning. Try adjusting the schedule later.
-- **Email not sending**: Double-check your Gmail App Password and ensure "Less secure app access" isn't blocking it.
+- **Email not sending**: Double-check your Gmail App Password. If you recently changed your Google Account password, you'll need to create a new App Password.
 - **Check Actions logs**: Go to Actions tab to see detailed logs of each run.
 
 ## Cost

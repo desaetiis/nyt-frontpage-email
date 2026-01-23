@@ -24,17 +24,40 @@ jobs:
         run: |
           URL="https://static01.nyt.com/images/${{ steps.date.outputs.year }}/${{ steps.date.outputs.month }}/${{ steps.date.outputs.day }}/nytfrontpage/scan.pdf"
           echo "Fetching: $URL"
-          
+
           HTTP_STATUS=$(curl -s -o nyt-frontpage.pdf -w "%{http_code}" "$URL")
-          
+
           if [ "$HTTP_STATUS" -ne 200 ]; then
             echo "Failed to download PDF. HTTP Status: $HTTP_STATUS"
             echo "The front page may not be available yet."
             exit 1
           fi
-          
+
           echo "Successfully downloaded NYT front page"
           ls -la nyt-frontpage.pdf
+
+      - name: Convert PDF to image
+        run: |
+          sudo apt-get update && sudo apt-get install -y poppler-utils
+          pdftoppm -png -r 150 -singlefile nyt-frontpage.pdf nyt-frontpage
+          ls -la nyt-frontpage.png
+
+      - name: Create HTML email body
+        run: |
+          BASE64_IMG=$(base64 -w 0 nyt-frontpage.png)
+          cat > email-body.html << EOF
+          <html>
+          <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+            <h2>Good morning!</h2>
+            <p>Here is today's New York Times front page for ${{ steps.date.outputs.formatted }}.</p>
+            <p><em>(Full PDF attached)</em></p>
+            <hr>
+            <img src="data:image/png;base64,${BASE64_IMG}" alt="NYT Front Page" style="max-width: 100%; height: auto;">
+            <hr>
+            <p style="color: #666; font-size: 12px;">Automated delivery via GitHub Actions</p>
+          </body>
+          </html>
+          EOF
 
       - name: Send email with PDF attachment
         uses: dawidd6/action-send-mail@v3
@@ -46,11 +69,5 @@ jobs:
           subject: "NYT Front Page - ${{ steps.date.outputs.formatted }}"
           to: afvadan@gmail.com
           from: ${{ secrets.GMAIL_USERNAME }}
-          body: |
-            Good morning!
-            
-            Attached is today's New York Times front page for ${{ steps.date.outputs.formatted }}.
-            
-            ---
-            Automated delivery via GitHub Actions
+          html_body: file://email-body.html
           attachments: nyt-frontpage.pdf
