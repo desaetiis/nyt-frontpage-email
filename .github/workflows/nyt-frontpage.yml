@@ -1,0 +1,56 @@
+name: NYT Front Page Daily
+
+on:
+  schedule:
+    # Runs at 7:00 AM EST (12:00 UTC) every day
+    # The PDF is usually available by early morning
+    - cron: '0 12 * * *'
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  fetch-and-email:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Get current date
+        id: date
+        run: |
+          echo "year=$(date +'%Y')" >> $GITHUB_OUTPUT
+          echo "month=$(date +'%m')" >> $GITHUB_OUTPUT
+          echo "day=$(date +'%d')" >> $GITHUB_OUTPUT
+          echo "formatted=$(date +'%B %d, %Y')" >> $GITHUB_OUTPUT
+
+      - name: Download NYT Front Page PDF
+        run: |
+          URL="https://static01.nyt.com/images/${{ steps.date.outputs.year }}/${{ steps.date.outputs.month }}/${{ steps.date.outputs.day }}/nytfrontpage/scan.pdf"
+          echo "Fetching: $URL"
+          
+          HTTP_STATUS=$(curl -s -o nyt-frontpage.pdf -w "%{http_code}" "$URL")
+          
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "Failed to download PDF. HTTP Status: $HTTP_STATUS"
+            echo "The front page may not be available yet."
+            exit 1
+          fi
+          
+          echo "Successfully downloaded NYT front page"
+          ls -la nyt-frontpage.pdf
+
+      - name: Send email with PDF attachment
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "NYT Front Page - ${{ steps.date.outputs.formatted }}"
+          to: afvadan@gmail.com
+          from: ${{ secrets.GMAIL_USERNAME }}
+          body: |
+            Good morning!
+            
+            Attached is today's New York Times front page for ${{ steps.date.outputs.formatted }}.
+            
+            ---
+            Automated delivery via GitHub Actions
+          attachments: nyt-frontpage.pdf
