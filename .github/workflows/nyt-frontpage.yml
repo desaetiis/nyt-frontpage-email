@@ -5,7 +5,7 @@ on:
     # Runs at 7:00 AM EST (12:00 UTC) every day
     # The PDF is usually available by early morning
     - cron: '0 12 * * *'
-  workflow_dispatch: # Allow manual trigger for testing
+  # workflow_dispatch: # Allow manual trigger for testing
 
 jobs:
   fetch-and-email:
