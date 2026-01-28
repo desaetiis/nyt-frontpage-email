@@ -67,7 +67,7 @@ jobs:
           username: ${{ secrets.GMAIL_USERNAME }}
           password: ${{ secrets.GMAIL_APP_PASSWORD }}
           subject: "NYT Front Page - ${{ steps.date.outputs.formatted }}"
-          to: afvadan@gmail.com
+          to: afvadan@gmail.com,fvadan@onedatasource.com
           from: ${{ secrets.GMAIL_USERNAME }}
           html_body: file://email-body.html
           attachments: nyt-frontpage.pdf
